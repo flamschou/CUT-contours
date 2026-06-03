@@ -72,7 +72,8 @@ class MatUnalignedDataset(BaseDataset):
 
     def __getitem__(self, index):
         A_path, A_idx = self.A_entries[index % self.A_size]
-        B_path, B_idx = self.B_entries[random.randint(0, self.B_size - 1)]
+        index_B = index % self.B_size if self.opt.serial_batches else random.randint(0, self.B_size - 1)
+        B_path, B_idx = self.B_entries[index_B]
 
         A_sl = self._load_slice(A_path, A_idx)
         B_sl = self._load_slice(B_path, B_idx)

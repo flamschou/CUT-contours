@@ -33,6 +33,11 @@ def make_dataset(dir, max_dataset_size=float("inf")):
     return images[:min(max_dataset_size, len(images))]
 
 
+def make_dataset_from_paths(paths, max_dataset_size=float("inf")):
+    images = [p for p in paths if is_image_file(p)]
+    return images[:min(max_dataset_size, len(images))]
+
+
 def default_loader(path):
     return Image.open(path).convert('RGB')
 

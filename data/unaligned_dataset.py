@@ -1,6 +1,7 @@
 import json
 import os.path
-from data.base_dataset import BaseDataset, get_transform
+import numpy as np
+from data.base_dataset import BaseDataset, get_transform, npy_to_tensor
 from data.image_folder import make_dataset, make_dataset_from_paths
 from PIL import Image
 import random
@@ -59,17 +60,16 @@ class UnalignedDataset(BaseDataset):
         else:   # randomize the index for domain B to avoid fixed pairs.
             index_B = random.randint(0, self.B_size - 1)
         B_path = self.B_paths[index_B]
-        A_img = Image.open(A_path).convert('RGB')
-        B_img = Image.open(B_path).convert('RGB')
-
-        # Apply image transformation
-        # For CUT/FastCUT mode, if in finetuning phase (learning rate is decaying),
-        # do not perform resize-crop data augmentation of CycleGAN.
         is_finetuning = self.opt.isTrain and self.current_epoch > self.opt.n_epochs
         modified_opt = util.copyconf(self.opt, load_size=self.opt.crop_size if is_finetuning else self.opt.load_size)
-        transform = get_transform(modified_opt)
-        A = transform(A_img)
-        B = transform(B_img)
+
+        if A_path.endswith('.npy'):
+            A = npy_to_tensor(np.load(A_path), modified_opt, is_finetuning)
+            B = npy_to_tensor(np.load(B_path), modified_opt, is_finetuning)
+        else:
+            transform = get_transform(modified_opt)
+            A = transform(Image.open(A_path).convert('RGB'))
+            B = transform(Image.open(B_path).convert('RGB'))
 
         return {'A': A, 'B': B, 'A_paths': A_path, 'B_paths': B_path}
 

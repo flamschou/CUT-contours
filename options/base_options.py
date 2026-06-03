@@ -25,6 +25,9 @@ class BaseOptions():
         # basic parameters
         parser.add_argument('--dataroot', default='placeholder', help='path to images (should have subfolders trainA, trainB, valA, valB, etc). Not required when --split_file is used.')
         parser.add_argument('--split_file', type=str, default=None, help='path to JSON file listing image paths per split. Keys: trainA, trainB, testA, testB. Overrides --dataroot.')
+        parser.add_argument('--mat_key', type=str, default=None, help='variable name inside .mat files (auto-detected if omitted)')
+        parser.add_argument('--coronal_axis', type=int, default=1, choices=[0, 1, 2], help='volume axis for coronal slices (default: 1)')
+        parser.add_argument('--min_content', type=float, default=0.02, help='min fraction of non-zero pixels to keep a slice (default: 0.02)')
         parser.add_argument('--name', type=str, default='experiment_name', help='name of the experiment. It decides where to store samples and models')
         parser.add_argument('--easy_label', type=str, default='experiment_name', help='Interpretable name')
         parser.add_argument('--gpu_ids', type=str, default='0', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')

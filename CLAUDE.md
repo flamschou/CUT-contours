@@ -20,18 +20,53 @@ Two active model variants:
 
 ## Dataset Setup
 
-Instead of copying heavy image datasets into the repo, use a `split.json` file listing absolute paths:
+### Step 1 — Lister les volumes .mat
+
+Créer deux fichiers texte (un chemin par ligne, `#` pour les commentaires) :
+
+```
+# ct_paths.txt
+/data/ct/patient001.mat
+/data/ct/patient002.mat
+```
+
+### Step 2 — Extraire les coupes coronales
+
+```bash
+python prepare_slices.py \
+    --ct_files  ct_paths.txt  \
+    --mri_files mri_paths.txt \
+    --output_dir ./slices     \
+    --split_file ./split.json
+```
+
+Options clés :
+- `--coronal_axis 1` — axe coronal dans le tableau stocké (0/1/2, défaut 1)
+- `--mat_key <nom>` — nom de la variable MATLAB dans le .mat (auto-détecté si absent)
+- `--train_ratio 0.85` — fraction de **volumes** pour le train (split au niveau volume)
+- `--min_content 0.02` — exclut les coupes avec moins de 2% de pixels non-nuls
+
+Gère le format MATLAB legacy (scipy) et MATLAB v7.3 HDF5 (h5py).
+Sortie : PNGs niveaux de gris dans `slices/ct/` et `slices/mri/`, plus `split.json`.
+
+### Step 3 — Entraîner
+
+```bash
+python train.py --split_file ./split.json --name mon_experience --CUT_mode CUT
+```
+
+### Format split.json
 
 ```json
 {
-  "trainA": ["/data/domainA/img001.jpg", "/data/domainA/img002.jpg"],
-  "trainB": ["/data/domainB/img001.jpg", "/data/domainB/img002.jpg"],
-  "testA":  ["/data/domainA/test001.jpg"],
-  "testB":  ["/data/domainB/test001.jpg"]
+  "trainA": ["/chemin/absolu/slice001.png", "..."],
+  "trainB": ["..."],
+  "testA":  ["..."],
+  "testB":  ["..."]
 }
 ```
 
-Pass it with `--split_file /path/to/split.json` — no `--dataroot` required.
+`--split_file` remplace `--dataroot` — pas besoin de copier les images dans le repo.
 
 ## Key Commands
 

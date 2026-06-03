@@ -4,3 +4,8 @@ dominate>=2.4.0
 visdom>=0.1.8.8
 packaging
 GPUtil>=1.4.0
+scipy>=1.5.0
+h5py>=3.0.0
+Pillow>=8.0.0
+numpy>=1.19.0
+# Pillow is still used by util/visualizer.py for result display

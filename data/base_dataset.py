@@ -4,6 +4,8 @@ It also includes common transformation functions (e.g., get_transform, __scale_w
 """
 import random
 import numpy as np
+import torch
+import torch.nn.functional as F
 import torch.utils.data as data
 from PIL import Image
 import torchvision.transforms as transforms
@@ -129,6 +131,35 @@ def get_transform(opt, params=None, grayscale=False, method=Image.BICUBIC, conve
         else:
             transform_list += [transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
     return transforms.Compose(transform_list)
+
+
+def npy_to_tensor(arr, opt, is_finetuning=False):
+    """
+    Transform a float32 [0,1] numpy array (H, W) directly to a float32 tensor (1, H, W) in [-1, 1].
+    Equivalent to get_transform but without any PIL or uint8 conversion.
+    """
+    load_size = opt.crop_size if is_finetuning else opt.load_size
+    crop_size = opt.crop_size
+
+    # (H, W) → (1, 1, H, W) for F.interpolate
+    t = torch.from_numpy(arr.astype(np.float32)).unsqueeze(0).unsqueeze(0)
+
+    if 'resize' in opt.preprocess:
+        t = F.interpolate(t, size=(load_size, load_size), mode='bilinear', align_corners=False)
+
+    if 'crop' in opt.preprocess:
+        _, _, h, w = t.shape
+        i = random.randint(0, max(0, h - crop_size))
+        j = random.randint(0, max(0, w - crop_size))
+        t = t[:, :, i:i + crop_size, j:j + crop_size]
+
+    t = t.squeeze(0)  # (1, H, W)
+
+    if not opt.no_flip and random.random() > 0.5:
+        t = torch.flip(t, dims=[2])
+
+    # [0, 1] → [-1, 1]
+    return t * 2.0 - 1.0
 
 
 def __make_power_2(img, base, method=Image.BICUBIC):
